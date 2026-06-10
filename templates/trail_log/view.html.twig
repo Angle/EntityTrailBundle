@@ -1,0 +1,73 @@
+{% extends '@AngleTrail/base.html.twig' %}
+
+{% block title %}Trail Log — {{ log.entityShortName }} #{{ log.entityId }}{% endblock %}
+
+{% set action_class = {
+    'create': 'bg-success',
+    'update': 'bg-warning text-dark',
+    'delete': 'bg-danger'
+} %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Trail Log entry</h1>
+        <a href="{{ path('angle_trail_list') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to list</a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Entity type</dt>
+                <dd class="col-sm-9"><code>{{ log.entityType }}</code></dd>
+
+                <dt class="col-sm-3">Record</dt>
+                <dd class="col-sm-9">
+                    {% if log.entityCode %}<span class="badge bg-light text-dark">{{ log.entityCode }}</span>{% endif %}
+                    <span class="text-muted">#{{ log.entityId }}</span>
+                </dd>
+
+                <dt class="col-sm-3">Action</dt>
+                <dd class="col-sm-9">
+                    <span class="badge {{ action_class[log.action]|default('bg-secondary') }}">{{ log.action }}</span>
+                </dd>
+
+                <dt class="col-sm-3">When</dt>
+                <dd class="col-sm-9">{{ log.createdAt|date('Y-m-d H:i:s') }}</dd>
+
+                <dt class="col-sm-3">User</dt>
+                <dd class="col-sm-9">{{ log.userLabel ?? '—' }}{% if log.userId %} <span class="text-muted">(id {{ log.userId }})</span>{% endif %}</dd>
+
+                <dt class="col-sm-3">IP address</dt>
+                <dd class="col-sm-9">{{ log.ipAddress ?? '—' }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Changes</div>
+        <div class="card-body">
+            {% if log.changes is empty %}
+                <p class="text-muted mb-0">No field-level changes recorded for this entry.</p>
+            {% else %}
+                <table class="table table-bordered table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%">Field</th>
+                            <th style="width: 37.5%">Old value</th>
+                            <th style="width: 37.5%">New value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for field, change in log.changes %}
+                            <tr>
+                                <th scope="row">{{ field }}</th>
+                                <td><pre class="mb-0"><code>{{ change.old is iterable ? change.old|json_encode(constant('JSON_PRETTY_PRINT')) : (change.old ?? 'null') }}</code></pre></td>
+                                <td><pre class="mb-0"><code>{{ change.new is iterable ? change.new|json_encode(constant('JSON_PRETTY_PRINT')) : (change.new ?? 'null') }}</code></pre></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

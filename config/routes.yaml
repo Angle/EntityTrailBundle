@@ -1,0 +1,14 @@
+angle_trail_list:
+    path: /
+    controller: Angle\TrailBundle\Controller\TrailLogController::list
+    methods: GET
+
+angle_trail_data:
+    path: /data
+    controller: Angle\TrailBundle\Controller\Ajax\TrailLogController::data
+    methods: POST
+
+angle_trail_view:
+    path: /{code}
+    controller: Angle\TrailBundle\Controller\TrailLogController::view
+    methods: GET

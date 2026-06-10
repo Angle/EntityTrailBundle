@@ -1,0 +1,87 @@
+{% extends '@AngleTrail/base.html.twig' %}
+
+{% block title %}Trail Log{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Trail Log</h1>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="filterEntityType" class="form-label">Entity type</label>
+                    <select id="filterEntityType" class="form-select">
+                        <option value="">All entities</option>
+                        {% for type in entity_types %}
+                            <option value="{{ type }}">{{ type|split('\\')|last }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filterAction" class="form-label">Action</label>
+                    <select id="filterAction" class="form-select">
+                        <option value="">All actions</option>
+                        <option value="create">create</option>
+                        <option value="update">update</option>
+                        <option value="delete">delete</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table id="trail-log-table" class="table table-striped table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>Entity</th>
+                        <th>Record</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>Changed fields</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var table = $('#trail-log-table').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [[5, 'desc']],
+                ajax: {
+                    url: '{{ path('angle_trail_data') }}',
+                    type: 'POST',
+                    data: function (d) {
+                        d.filterEntityType = $('#filterEntityType').val();
+                        d.filterAction = $('#filterAction').val();
+                    }
+                },
+                columns: [
+                    { data: 'entity' },
+                    { data: 'record' },
+                    { data: 'action', orderable: false },
+                    { data: 'user' },
+                    { data: 'changes', orderable: false },
+                    { data: 'created_at' },
+                    { data: 'actions', orderable: false, searchable: false }
+                ]
+            });
+
+            $('#filterEntityType, #filterAction').on('change', function () {
+                table.ajax.reload();
+            });
+        });
+    </script>
+{% endblock %}
