@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\EventListener;
+namespace Angle\EntityTrailBundle\EventListener;
 
-use Angle\TrailBundle\Attribute\TrailExclude;
-use Angle\TrailBundle\Attribute\TrailIgnore;
-use Angle\TrailBundle\Contract\TrailUserProviderInterface;
-use Angle\TrailBundle\Entity\TrailLog;
+use Angle\EntityTrailBundle\Attribute\EntityTrailExclude;
+use Angle\EntityTrailBundle\Attribute\EntityTrailIgnore;
+use Angle\EntityTrailBundle\Contract\EntityTrailUserProviderInterface;
+use Angle\EntityTrailBundle\Entity\EntityTrailLog;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
@@ -17,14 +17,14 @@ use Doctrine\ORM\Event\PreRemoveEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 
 /**
- * Writes a JSON diff to `trail_logs` whenever a tracked entity is created,
+ * Writes a JSON diff to `entity_trail_logs` whenever a tracked entity is created,
  * updated, or deleted.
  *
  * Audit rows are queued during the lifecycle events and flushed with a raw
  * DBAL insert in postFlush — no ORM involvement in the write, so there is no
  * risk of triggering a recursive flush cycle.
  */
-final class TrailListener
+final class EntityTrailListener
 {
     /**
      * Changesets captured in preUpdate, keyed by spl_object_id, awaiting postUpdate.
@@ -73,7 +73,7 @@ final class TrailListener
      */
     public function __construct(
         private readonly array $config,
-        private readonly TrailUserProviderInterface $userProvider,
+        private readonly EntityTrailUserProviderInterface $userProvider,
     ) {
     }
 
@@ -125,7 +125,7 @@ final class TrailListener
         $changeset = $this->pending[$oid];
         unset($this->pending[$oid]);
 
-        $this->enqueue($args->getObjectManager(), $entity, TrailLog::ACTION_UPDATE, $changeset);
+        $this->enqueue($args->getObjectManager(), $entity, EntityTrailLog::ACTION_UPDATE, $changeset);
     }
 
     public function postPersist(PostPersistEventArgs $args): void
@@ -142,7 +142,7 @@ final class TrailListener
         $em = $args->getObjectManager();
         $changes = $this->removeIgnoredFields($this->snapshot($em, $entity), $entity);
 
-        $this->enqueue($em, $entity, TrailLog::ACTION_CREATE, $changes);
+        $this->enqueue($em, $entity, EntityTrailLog::ACTION_CREATE, $changes);
     }
 
     public function preRemove(PreRemoveEventArgs $args): void
@@ -158,7 +158,7 @@ final class TrailListener
 
         // preRemove runs at remove()-time, before the flush. Buffer it; onFlush will
         // move it into the queue for the flush that actually performs the delete.
-        $row = $this->buildRow($args->getObjectManager(), $entity, TrailLog::ACTION_DELETE, []);
+        $row = $this->buildRow($args->getObjectManager(), $entity, EntityTrailLog::ACTION_DELETE, []);
         if ($row !== null) {
             $this->pendingDeletes[] = $row;
         }
@@ -175,7 +175,7 @@ final class TrailListener
         $this->queue = [];
 
         foreach ($rows as $log) {
-            $conn->insert('trail_logs', [
+            $conn->insert('entity_trail_logs', [
                 'code'        => $log['code'],
                 'entity_type' => $log['entity_type'],
                 'entity_id'   => $log['entity_id'],
@@ -233,14 +233,14 @@ final class TrailListener
 
     /**
      * should_skip(entity):
-     *   1. Entity is TrailLog itself          → skip (prevent recursion)
-     *   2. Class has #[TrailExclude]           → skip
+     *   1. Entity is EntityTrailLog itself          → skip (prevent recursion)
+     *   2. Class has #[EntityTrailExclude]           → skip
      *   3. FQCN is in exclude_entities config  → skip
      *   4. otherwise                           → track
      */
     private function shouldSkip(object $entity): bool
     {
-        if ($entity instanceof TrailLog) {
+        if ($entity instanceof EntityTrailLog) {
             return true;
         }
 
@@ -256,7 +256,7 @@ final class TrailListener
             $skip = true;
         } else {
             $reflection = new \ReflectionClass($class);
-            if ($reflection->getAttributes(TrailExclude::class) !== []) {
+            if ($reflection->getAttributes(EntityTrailExclude::class) !== []) {
                 $skip = true;
             }
         }
@@ -267,7 +267,7 @@ final class TrailListener
     /**
      * remove_ignored_fields(changeset, entity):
      *   1. Remove fields listed in exclude_fields config.
-     *   2. Remove properties carrying #[TrailIgnore].
+     *   2. Remove properties carrying #[EntityTrailIgnore].
      *
      * @param array<string, array{old: mixed, new: mixed}> $changeset
      *
@@ -302,7 +302,7 @@ final class TrailListener
 
         while ($reflection !== false) {
             foreach ($reflection->getProperties() as $property) {
-                if ($property->getAttributes(TrailIgnore::class) !== []) {
+                if ($property->getAttributes(EntityTrailIgnore::class) !== []) {
                     $ignored[] = $property->getName();
                 }
             }

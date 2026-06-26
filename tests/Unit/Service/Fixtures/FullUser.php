@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Unit\Service\Fixtures;
+namespace Angle\EntityTrailBundle\Tests\Unit\Service\Fixtures;
 
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * A user that exposes getId()/getFullName()/getEmail() — the shape
- * SecurityTrailUserProvider probes for via method_exists().
+ * SecurityEntityTrailUserProvider probes for via method_exists().
  */
 final class FullUser implements UserInterface
 {

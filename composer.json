@@ -1,5 +1,5 @@
 {
-    "name": "anglemx/trail-bundle",
+    "name": "anglemx/entity-trail-bundle",
     "description": "Automatic Doctrine entity audit log for Symfony — who changed what and when.",
     "type": "symfony-bundle",
     "license": "proprietary",
@@ -18,10 +18,10 @@
         "doctrine/doctrine-migrations-bundle": "^3.3"
     },
     "autoload": {
-        "psr-4": { "Angle\\TrailBundle\\": "src/" }
+        "psr-4": { "Angle\\EntityTrailBundle\\": "src/" }
     },
     "autoload-dev": {
-        "psr-4": { "Angle\\TrailBundle\\Tests\\": "tests/" }
+        "psr-4": { "Angle\\EntityTrailBundle\\Tests\\": "tests/" }
     },
     "extra": {
         "symfony": {

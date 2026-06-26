@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Repository;
+namespace Angle\EntityTrailBundle\Repository;
 
-use Angle\TrailBundle\Entity\TrailLog;
+use Angle\EntityTrailBundle\Entity\EntityTrailLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<TrailLog>
+ * @extends ServiceEntityRepository<EntityTrailLog>
  */
-class TrailLogRepository extends ServiceEntityRepository
+class EntityTrailLogRepository extends ServiceEntityRepository
 {
     /**
      * Logical sort column → entity field, used by the DataTables endpoint.
@@ -28,13 +28,13 @@ class TrailLogRepository extends ServiceEntityRepository
 
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, TrailLog::class);
+        parent::__construct($registry, EntityTrailLog::class);
     }
 
     /**
      * All entries for a specific record, newest first.
      *
-     * @return list<TrailLog>
+     * @return list<EntityTrailLog>
      */
     public function findByEntity(string $entityType, int $entityId): array
     {
@@ -51,7 +51,7 @@ class TrailLogRepository extends ServiceEntityRepository
     /**
      * Server-side DataTables query.
      *
-     * @return array{recordsTotal: int, recordsFiltered: int, items: list<TrailLog>}
+     * @return array{recordsTotal: int, recordsFiltered: int, items: list<EntityTrailLog>}
      */
     public function findForDataTable(
         string $search,
@@ -114,7 +114,7 @@ class TrailLogRepository extends ServiceEntityRepository
     /**
      * Most recent modification for a record (for "last edited by" UI).
      */
-    public function findLastUpdate(string $entityType, int $entityId): ?TrailLog
+    public function findLastUpdate(string $entityType, int $entityId): ?EntityTrailLog
     {
         return $this->createQueryBuilder('t')
             ->andWhere('t.entityType = :type')

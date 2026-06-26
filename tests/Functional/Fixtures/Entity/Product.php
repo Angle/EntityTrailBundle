@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Functional\Fixtures\Entity;
+namespace Angle\EntityTrailBundle\Tests\Functional\Fixtures\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 

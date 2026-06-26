@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Functional;
+namespace Angle\EntityTrailBundle\Tests\Functional;
 
-use Angle\TrailBundle\Entity\TrailLog;
-use Angle\TrailBundle\Tests\Functional\Fixtures\Entity\Product;
-use Angle\TrailBundle\Tests\Functional\Fixtures\Entity\SessionLog;
-use Angle\TrailBundle\Tests\Functional\Fixtures\Entity\User;
+use Angle\EntityTrailBundle\Entity\EntityTrailLog;
+use Angle\EntityTrailBundle\Tests\Functional\Fixtures\Entity\Product;
+use Angle\EntityTrailBundle\Tests\Functional\Fixtures\Entity\SessionLog;
+use Angle\EntityTrailBundle\Tests\Functional\Fixtures\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\TestCase;
 
-final class TrailListenerFunctionalTest extends TestCase
+final class EntityTrailListenerFunctionalTest extends TestCase
 {
-    private ?TrailTestKernel $kernel = null;
+    private ?EntityTrailTestKernel $kernel = null;
 
     protected function tearDown(): void
     {
@@ -32,7 +32,7 @@ final class TrailListenerFunctionalTest extends TestCase
      */
     private function boot(array $trailConfig = []): EntityManagerInterface
     {
-        $this->kernel = new TrailTestKernel($trailConfig);
+        $this->kernel = new EntityTrailTestKernel($trailConfig);
         $this->kernel->boot();
 
         /** @var EntityManagerInterface $em */
@@ -49,7 +49,7 @@ final class TrailListenerFunctionalTest extends TestCase
      */
     private function rows(EntityManagerInterface $em, ?string $action = null): array
     {
-        $sql = 'SELECT * FROM trail_logs';
+        $sql = 'SELECT * FROM entity_trail_logs';
         $params = [];
         if ($action !== null) {
             $sql .= ' WHERE action = ?';
@@ -108,7 +108,7 @@ final class TrailListenerFunctionalTest extends TestCase
         $product->setUpdatedAt('2026-06-10');
         $em->flush();
 
-        $rows = $this->rows($em, TrailLog::ACTION_UPDATE);
+        $rows = $this->rows($em, EntityTrailLog::ACTION_UPDATE);
         self::assertCount(1, $rows);
 
         $changes = $rows[0]['changes'];
@@ -128,7 +128,7 @@ final class TrailListenerFunctionalTest extends TestCase
         $product->setUpdatedAt('2026-06-10');
         $em->flush();
 
-        self::assertCount(0, $this->rows($em, TrailLog::ACTION_UPDATE));
+        self::assertCount(0, $this->rows($em, EntityTrailLog::ACTION_UPDATE));
     }
 
     public function testDeleteWritesADeleteRowWithEmptyChanges(): void
@@ -143,13 +143,13 @@ final class TrailListenerFunctionalTest extends TestCase
         $em->remove($product);
         $em->flush();
 
-        $rows = $this->rows($em, TrailLog::ACTION_DELETE);
+        $rows = $this->rows($em, EntityTrailLog::ACTION_DELETE);
         self::assertCount(1, $rows);
         self::assertSame($productId, (int) $rows[0]['entity_id']);
         self::assertSame([], $rows[0]['changes']);
     }
 
-    public function testTrailExcludeAttributeSkipsEntityEntirely(): void
+    public function testEntityTrailExcludeAttributeSkipsEntityEntirely(): void
     {
         $em = $this->boot();
 
@@ -159,7 +159,7 @@ final class TrailListenerFunctionalTest extends TestCase
         self::assertCount(0, $this->rows($em));
     }
 
-    public function testTrailIgnoreAttributeStripsField(): void
+    public function testEntityTrailIgnoreAttributeStripsField(): void
     {
         $em = $this->boot();
 
@@ -168,7 +168,7 @@ final class TrailListenerFunctionalTest extends TestCase
         $em->flush();
 
         // Create snapshot must not include the ignored passwordHash.
-        $createChanges = $this->rows($em, TrailLog::ACTION_CREATE)[0]['changes'];
+        $createChanges = $this->rows($em, EntityTrailLog::ACTION_CREATE)[0]['changes'];
         self::assertArrayHasKey('email', $createChanges);
         self::assertArrayNotHasKey('passwordHash', $createChanges);
 
@@ -176,7 +176,7 @@ final class TrailListenerFunctionalTest extends TestCase
         $user->setPasswordHash('hash-2');
         $em->flush();
 
-        $updateChanges = $this->rows($em, TrailLog::ACTION_UPDATE)[0]['changes'];
+        $updateChanges = $this->rows($em, EntityTrailLog::ACTION_UPDATE)[0]['changes'];
         self::assertArrayHasKey('email', $updateChanges);
         self::assertArrayNotHasKey('passwordHash', $updateChanges);
     }
@@ -203,7 +203,7 @@ final class TrailListenerFunctionalTest extends TestCase
         // Updates still tracked.
         $product->setName('Gadget');
         $em->flush();
-        self::assertCount(1, $this->rows($em, TrailLog::ACTION_UPDATE));
+        self::assertCount(1, $this->rows($em, EntityTrailLog::ACTION_UPDATE));
     }
 
     public function testRepositoryReadsBackThroughTheOrm(): void
@@ -214,11 +214,11 @@ final class TrailListenerFunctionalTest extends TestCase
         $em->persist($product);
         $em->flush();
 
-        $repository = $em->getRepository(TrailLog::class);
+        $repository = $em->getRepository(EntityTrailLog::class);
         $history = $repository->findByEntity(Product::class, (int) $product->getId());
 
         self::assertCount(1, $history);
-        self::assertInstanceOf(TrailLog::class, $history[0]);
+        self::assertInstanceOf(EntityTrailLog::class, $history[0]);
         self::assertSame('create', $history[0]->getAction());
         self::assertSame('XYZ', $history[0]->getEntityCode());
     }

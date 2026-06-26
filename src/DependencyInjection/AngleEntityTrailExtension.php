@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\DependencyInjection;
+namespace Angle\EntityTrailBundle\DependencyInjection;
 
-use Angle\TrailBundle\Controller\Ajax\TrailLogController as AjaxTrailLogController;
-use Angle\TrailBundle\Controller\TrailLogController;
+use Angle\EntityTrailBundle\Controller\Ajax\EntityTrailLogController as AjaxEntityTrailLogController;
+use Angle\EntityTrailBundle\Controller\EntityTrailLogController;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
-final class AngleTrailExtension extends Extension
+final class AngleEntityTrailExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
@@ -22,23 +22,23 @@ final class AngleTrailExtension extends Extension
         $loader->load('services.yaml');
 
         // Expose the resolved config to the listener and controllers.
-        $container->setParameter('angle_trail.config', $config);
+        $container->setParameter('angle_entity_trail.config', $config);
 
         // Allow overriding the user provider with a project service id.
         if (!empty($config['user_provider'])) {
-            $container->setAlias('angle_trail.user_provider', $config['user_provider'])
+            $container->setAlias('angle_entity_trail.user_provider', $config['user_provider'])
                 ->setPublic(true);
         }
 
         // Drop the admin controllers when the admin UI is disabled.
         if (!$config['enable_admin']) {
-            $container->removeDefinition(TrailLogController::class);
-            $container->removeDefinition(AjaxTrailLogController::class);
+            $container->removeDefinition(EntityTrailLogController::class);
+            $container->removeDefinition(AjaxEntityTrailLogController::class);
         }
     }
 
     public function getAlias(): string
     {
-        return 'angle_trail';
+        return 'angle_entity_trail';
     }
 }

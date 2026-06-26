@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\DependencyInjection;
+namespace Angle\EntityTrailBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -11,7 +11,7 @@ final class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('angle_trail');
+        $treeBuilder = new TreeBuilder('angle_entity_trail');
 
         $treeBuilder->getRootNode()
             ->children()
@@ -46,7 +46,7 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue('/admin/trail-log')
                 ->end()
                 ->scalarNode('user_provider')
-                    ->info('Service id overriding the default SecurityTrailUserProvider. null = use default.')
+                    ->info('Service id overriding the default SecurityEntityTrailUserProvider. null = use default.')
                     ->defaultNull()
                 ->end()
             ->end();

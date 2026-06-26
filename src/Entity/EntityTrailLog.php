@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Entity;
+namespace Angle\EntityTrailBundle\Entity;
 
-use Angle\TrailBundle\Repository\TrailLogRepository;
+use Angle\EntityTrailBundle\Repository\EntityTrailLogRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: TrailLogRepository::class)]
-#[ORM\Table(name: 'trail_logs')]
-#[ORM\Index(name: 'idx_trail_entity', columns: ['entity_type', 'entity_id'])]
-#[ORM\Index(name: 'idx_trail_created', columns: ['created_at'])]
-#[ORM\Index(name: 'idx_trail_user', columns: ['user_id'])]
+#[ORM\Entity(repositoryClass: EntityTrailLogRepository::class)]
+#[ORM\Table(name: 'entity_trail_logs')]
+#[ORM\Index(name: 'idx_entity_trail_entity', columns: ['entity_type', 'entity_id'])]
+#[ORM\Index(name: 'idx_entity_trail_created', columns: ['created_at'])]
+#[ORM\Index(name: 'idx_entity_trail_user', columns: ['user_id'])]
 #[ORM\HasLifecycleCallbacks]
-class TrailLog
+class EntityTrailLog
 {
     public const ACTION_CREATE = 'create';
     public const ACTION_UPDATE = 'update';

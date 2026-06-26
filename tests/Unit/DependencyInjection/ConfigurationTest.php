@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Unit\DependencyInjection;
+namespace Angle\EntityTrailBundle\Tests\Unit\DependencyInjection;
 
-use Angle\TrailBundle\DependencyInjection\Configuration;
+use Angle\EntityTrailBundle\DependencyInjection\Configuration;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Processor;
 

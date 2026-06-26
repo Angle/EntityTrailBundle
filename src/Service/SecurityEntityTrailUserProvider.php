@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Service;
+namespace Angle\EntityTrailBundle\Service;
 
-use Angle\TrailBundle\Contract\TrailUserProviderInterface;
+use Angle\EntityTrailBundle\Contract\EntityTrailUserProviderInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * the client IP from the current request. In CLI/worker contexts where there is
  * no authenticated user, every getter returns null.
  */
-final class SecurityTrailUserProvider implements TrailUserProviderInterface
+final class SecurityEntityTrailUserProvider implements EntityTrailUserProviderInterface
 {
     public function __construct(
         private readonly Security $security,

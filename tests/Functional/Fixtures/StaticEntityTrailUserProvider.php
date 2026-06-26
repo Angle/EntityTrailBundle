@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Functional\Fixtures;
+namespace Angle\EntityTrailBundle\Tests\Functional\Fixtures;
 
-use Angle\TrailBundle\Contract\TrailUserProviderInterface;
+use Angle\EntityTrailBundle\Contract\EntityTrailUserProviderInterface;
 
 /**
  * Deterministic user provider for functional tests — no security context needed.
  */
-final class StaticTrailUserProvider implements TrailUserProviderInterface
+final class StaticEntityTrailUserProvider implements EntityTrailUserProviderInterface
 {
     public function getCurrentUserId(): ?int
     {

@@ -1,6 +1,6 @@
-{% extends '@AngleTrail/base.html.twig' %}
+{% extends '@AngleEntityTrail/base.html.twig' %}
 
-{% block title %}Trail Log — {{ log.entityShortName }} #{{ log.entityId }}{% endblock %}
+{% block title %}Entity Trail Log — {{ log.entityShortName }} #{{ log.entityId }}{% endblock %}
 
 {% set action_class = {
     'create': 'bg-success',
@@ -10,8 +10,8 @@
 
 {% block body %}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Trail Log entry</h1>
-        <a href="{{ path('angle_trail_list') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to list</a>
+        <h1 class="h3 mb-0">Entity Trail Log entry</h1>
+        <a href="{{ path('angle_entity_trail_list') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to list</a>
     </div>
 
     <div class="card mb-3">

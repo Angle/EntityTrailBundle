@@ -2,54 +2,54 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Unit\Attribute;
+namespace Angle\EntityTrailBundle\Tests\Unit\Attribute;
 
-use Angle\TrailBundle\Attribute\TrailExclude;
-use Angle\TrailBundle\Attribute\TrailIgnore;
+use Angle\EntityTrailBundle\Attribute\EntityTrailExclude;
+use Angle\EntityTrailBundle\Attribute\EntityTrailIgnore;
 use PHPUnit\Framework\TestCase;
 
 final class AttributesTest extends TestCase
 {
-    public function testTrailExcludeIsReadableFromAClass(): void
+    public function testEntityTrailExcludeIsReadableFromAClass(): void
     {
         $reflection = new \ReflectionClass(ExcludedFixture::class);
 
-        self::assertCount(1, $reflection->getAttributes(TrailExclude::class));
+        self::assertCount(1, $reflection->getAttributes(EntityTrailExclude::class));
     }
 
-    public function testTrailExcludeIsAbsentOnAPlainClass(): void
+    public function testEntityTrailExcludeIsAbsentOnAPlainClass(): void
     {
         $reflection = new \ReflectionClass(PlainFixture::class);
 
-        self::assertCount(0, $reflection->getAttributes(TrailExclude::class));
+        self::assertCount(0, $reflection->getAttributes(EntityTrailExclude::class));
     }
 
-    public function testTrailIgnoreIsReadableFromAProperty(): void
+    public function testEntityTrailIgnoreIsReadableFromAProperty(): void
     {
         $reflection = new \ReflectionClass(PlainFixture::class);
 
-        self::assertCount(1, $reflection->getProperty('secret')->getAttributes(TrailIgnore::class));
-        self::assertCount(0, $reflection->getProperty('name')->getAttributes(TrailIgnore::class));
+        self::assertCount(1, $reflection->getProperty('secret')->getAttributes(EntityTrailIgnore::class));
+        self::assertCount(0, $reflection->getProperty('name')->getAttributes(EntityTrailIgnore::class));
     }
 
-    public function testTrailExcludeTargetsClassesOnly(): void
+    public function testEntityTrailExcludeTargetsClassesOnly(): void
     {
-        $reflection = new \ReflectionClass(TrailExclude::class);
+        $reflection = new \ReflectionClass(EntityTrailExclude::class);
         $attribute = $reflection->getAttributes(\Attribute::class)[0]->newInstance();
 
         self::assertSame(\Attribute::TARGET_CLASS, $attribute->flags);
     }
 
-    public function testTrailIgnoreTargetsPropertiesOnly(): void
+    public function testEntityTrailIgnoreTargetsPropertiesOnly(): void
     {
-        $reflection = new \ReflectionClass(TrailIgnore::class);
+        $reflection = new \ReflectionClass(EntityTrailIgnore::class);
         $attribute = $reflection->getAttributes(\Attribute::class)[0]->newInstance();
 
         self::assertSame(\Attribute::TARGET_PROPERTY, $attribute->flags);
     }
 }
 
-#[TrailExclude]
+#[EntityTrailExclude]
 final class ExcludedFixture
 {
 }
@@ -58,6 +58,6 @@ final class PlainFixture
 {
     public string $name = '';
 
-    #[TrailIgnore]
+    #[EntityTrailIgnore]
     public string $secret = '';
 }

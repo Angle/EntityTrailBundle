@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Attribute;
+namespace Angle\EntityTrailBundle\Attribute;
 
 /**
  * Placed on an entity class to skip it entirely from the audit trail.
  *
- * #[TrailExclude]
+ * #[EntityTrailExclude]
  * class SessionLog { ... }
  */
 #[\Attribute(\Attribute::TARGET_CLASS)]
-final class TrailExclude
+final class EntityTrailExclude
 {
 }

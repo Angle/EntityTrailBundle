@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Unit\Controller\Ajax;
+namespace Angle\EntityTrailBundle\Tests\Unit\Controller\Ajax;
 
-use Angle\TrailBundle\Controller\Ajax\TrailLogController;
-use Angle\TrailBundle\Entity\TrailLog;
-use Angle\TrailBundle\Repository\TrailLogRepository;
+use Angle\EntityTrailBundle\Controller\Ajax\EntityTrailLogController;
+use Angle\EntityTrailBundle\Entity\EntityTrailLog;
+use Angle\EntityTrailBundle\Repository\EntityTrailLogRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class TrailLogControllerTest extends TestCase
+final class EntityTrailLogControllerTest extends TestCase
 {
-    private function sampleLog(): TrailLog
+    private function sampleLog(): EntityTrailLog
     {
-        return (new TrailLog())
+        return (new EntityTrailLog())
             ->setCode('abcdef0123456789abcdef0123456789')
             ->setEntityType('App\\Entity\\Product')
             ->setEntityId(42)
             ->setEntityCode('ABC123')
-            ->setAction(TrailLog::ACTION_UPDATE)
+            ->setAction(EntityTrailLog::ACTION_UPDATE)
             ->setChanges(['name' => ['old' => 'a', 'new' => 'b'], 'email' => ['old' => null, 'new' => 'x']])
             ->setUserLabel('Ada Lovelace')
             ->setCreatedAt(new \DateTimeImmutable('2026-06-10 14:32:05'));
@@ -30,7 +30,7 @@ final class TrailLogControllerTest extends TestCase
     {
         $log = $this->sampleLog();
 
-        $repository = $this->createMock(TrailLogRepository::class);
+        $repository = $this->createMock(EntityTrailLogRepository::class);
         $repository->expects(self::once())
             ->method('findForDataTable')
             ->with('cli', 0, 10, 'created_at', 'ASC', 'App\\Entity\\Product', 'update')
@@ -38,10 +38,10 @@ final class TrailLogControllerTest extends TestCase
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')
-            ->with('angle_trail_view', ['code' => $log->getCode()])
+            ->with('angle_entity_trail_view', ['code' => $log->getCode()])
             ->willReturn('/admin/trail-log/' . $log->getCode());
 
-        $controller = new TrailLogController($repository, $urlGenerator);
+        $controller = new EntityTrailLogController($repository, $urlGenerator);
 
         $request = new Request([], [
             'draw'             => 3,
@@ -76,13 +76,13 @@ final class TrailLogControllerTest extends TestCase
 
     public function testDataDefaultsToCreatedAtDescWhenNoOrderGiven(): void
     {
-        $repository = $this->createMock(TrailLogRepository::class);
+        $repository = $this->createMock(EntityTrailLogRepository::class);
         $repository->expects(self::once())
             ->method('findForDataTable')
             ->with('', 0, 25, 'created_at', 'DESC', null, null)
             ->willReturn(['recordsTotal' => 0, 'recordsFiltered' => 0, 'items' => []]);
 
-        $controller = new TrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
 
         $response = $controller->data(new Request([], ['draw' => 1]));
         $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -93,13 +93,13 @@ final class TrailLogControllerTest extends TestCase
 
     public function testRecordFallsBackToEntityIdWhenNoCode(): void
     {
-        $log = $this->sampleLog()->setEntityCode(null)->setAction(TrailLog::ACTION_DELETE);
+        $log = $this->sampleLog()->setEntityCode(null)->setAction(EntityTrailLog::ACTION_DELETE);
 
-        $repository = $this->createMock(TrailLogRepository::class);
+        $repository = $this->createMock(EntityTrailLogRepository::class);
         $repository->method('findForDataTable')
             ->willReturn(['recordsTotal' => 1, 'recordsFiltered' => 1, 'items' => [$log]]);
 
-        $controller = new TrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
 
         $payload = json_decode(
             (string) $controller->data(new Request([], ['draw' => 1]))->getContent(),

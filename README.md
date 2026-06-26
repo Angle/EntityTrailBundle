@@ -1,4 +1,4 @@
-# anglemx/trail-bundle
+# anglemx/entity-trail-bundle
 
 Symfony bundle that automatically records **who changed what data and when**, for any
 Doctrine-managed entity. Drop-in replacement for per-entity changelog tables
@@ -6,7 +6,7 @@ Doctrine-managed entity. Drop-in replacement for per-entity changelog tables
 configurable field exclusions, and an optional admin UI.
 
 Every create / update / delete of a tracked entity writes one row to a single
-`trail_logs` table with a JSON diff (`{"field": {"old": x, "new": y}}`), the acting
+`entity_trail_logs` table with a JSON diff (`{"field": {"old": x, "new": y}}`), the acting
 user, their IP, and a timestamp.
 
 ## Requirements
@@ -24,20 +24,20 @@ is used at runtime — but they remain Composer dependencies.
 
 ## How it works
 
-`TrailListener` subscribes to Doctrine lifecycle events. It captures the changeset
+`EntityTrailListener` subscribes to Doctrine lifecycle events. It captures the changeset
 during `preUpdate` / `postPersist` / `preRemove`, queues an audit row in memory, and
 writes the queued rows in `postFlush` with a **raw DBAL insert** — no ORM involvement in
 the write, so there's no recursive flush cycle and no risk of the audit write joining the
 business transaction. An `onFlush` reset guarantees a rolled-back transaction can't leak
 audit rows into the next successful flush.
 
-The `trail_logs` table stores `entity_type` / `entity_id` as plain columns — there are no
+The `entity_trail_logs` table stores `entity_type` / `entity_id` as plain columns — there are no
 ORM relations to your entities, so the bundle stays decoupled from every project.
 
 ## Installation
 
 ```bash
-composer require anglemx/trail-bundle
+composer require anglemx/entity-trail-bundle
 ```
 
 ### 1. Register the bundle
@@ -46,15 +46,15 @@ composer require anglemx/trail-bundle
 // config/bundles.php
 return [
     // ...
-    Angle\TrailBundle\AngleTrailBundle::class => ['all' => true],
+    Angle\EntityTrailBundle\AngleEntityTrailBundle::class => ['all' => true],
 ];
 ```
 
 ### 2. Configure it
 
 ```yaml
-# config/packages/angle_trail.yaml
-angle_trail:
+# config/packages/angle_entity_trail.yaml
+angle_entity_trail:
     track_creates: true
     track_updates: true
     track_deletes: true
@@ -64,7 +64,7 @@ angle_trail:
         - App\Entity\NotificationEmailLog
     enable_admin: true
     admin_route_prefix: /admin/trail-log
-    user_provider: null   # null = default SecurityTrailUserProvider; or a service id
+    user_provider: null   # null = default SecurityEntityTrailUserProvider; or a service id
 ```
 
 All keys are optional; the defaults above (minus the example exclusions) are applied
@@ -75,12 +75,12 @@ your list fully overrides the built-in `[updatedAt, createdAt, deletedAt]`.
 
 ```yaml
 # config/routes/audit.yaml
-_angle_trail:
-    resource: '@AngleTrailBundle/config/routes.yaml'
+_angle_entity_trail:
+    resource: '@AngleEntityTrailBundle/config/routes.yaml'
     prefix: /admin/trail-log
 ```
 
-### 4. Create the `trail_logs` table
+### 4. Create the `entity_trail_logs` table
 
 The bundle ships a migration, but a project's `doctrine_migrations.migrations_paths`
 does not scan `vendor/` by default. Pick one:
@@ -92,18 +92,18 @@ does not scan `vendor/` by default. Pick one:
 doctrine_migrations:
     migrations_paths:
         'DoctrineMigrations': '%kernel.project_dir%/migrations'
-        'Angle\TrailBundle\Migrations': '%kernel.project_dir%/vendor/anglemx/trail-bundle/migrations'
+        'Angle\EntityTrailBundle\Migrations': '%kernel.project_dir%/vendor/anglemx/entity-trail-bundle/migrations'
 ```
 
 ```bash
 bin/console doctrine:migrations:migrate
 ```
 
-**Option B — generate it yourself.** The `TrailLog` entity is auto-mapped by the bundle,
+**Option B — generate it yourself.** The `EntityTrailLog` entity is auto-mapped by the bundle,
 so Doctrine already knows the schema:
 
 ```bash
-bin/console make:migration   # generates the CREATE TABLE trail_logs migration
+bin/console make:migration   # generates the CREATE TABLE entity_trail_logs migration
 bin/console doctrine:migrations:migrate
 ```
 
@@ -115,26 +115,26 @@ automatic from here.
 ### Skip an entire entity
 
 ```php
-use Angle\TrailBundle\Attribute\TrailExclude;
+use Angle\EntityTrailBundle\Attribute\EntityTrailExclude;
 
-#[TrailExclude]
+#[EntityTrailExclude]
 class SessionLog { /* ... */ }
 ```
 
 ### Skip sensitive / high-churn fields
 
 ```php
-use Angle\TrailBundle\Attribute\TrailIgnore;
+use Angle\EntityTrailBundle\Attribute\EntityTrailIgnore;
 
 class User
 {
-    #[TrailIgnore]
+    #[EntityTrailIgnore]
     private string $passwordHash;
 
-    #[TrailIgnore]
+    #[EntityTrailIgnore]
     private ?\DateTimeImmutable $lastLoginAt;   // changes on every login
 
-    #[TrailIgnore]
+    #[EntityTrailIgnore]
     private ?string $rememberMeToken;
 }
 ```
@@ -142,14 +142,14 @@ class User
 ### Skip vendor entities you can't annotate
 
 ```yaml
-angle_trail:
+angle_entity_trail:
     exclude_entities:
         - Angle\JobSchedulerBundle\Entity\JobSchedulerLog
 ```
 
 ## Querying the trail
 
-Inject `Angle\TrailBundle\Repository\TrailLogRepository`:
+Inject `Angle\EntityTrailBundle\Repository\EntityTrailLogRepository`:
 
 ```php
 $repo->findByEntity(Client::class, $clientId);        // full history, newest first
@@ -159,14 +159,14 @@ $repo->countByUser($userId, $from, $to);              // activity in a date rang
 
 ## Custom user provider
 
-The default `SecurityTrailUserProvider` reads the logged-in user and request IP, and
+The default `SecurityEntityTrailUserProvider` reads the logged-in user and request IP, and
 returns `null` for everything in CLI/worker contexts. To customise (e.g. a worker that
 acts on behalf of a user), implement the contract and point the config at your service:
 
 ```php
-use Angle\TrailBundle\Contract\TrailUserProviderInterface;
+use Angle\EntityTrailBundle\Contract\EntityTrailUserProviderInterface;
 
-final class MyTrailUserProvider implements TrailUserProviderInterface
+final class MyEntityTrailUserProvider implements EntityTrailUserProviderInterface
 {
     public function getCurrentUserId(): ?int { /* ... */ }
     public function getCurrentUserLabel(): ?string { /* ... */ }
@@ -175,8 +175,8 @@ final class MyTrailUserProvider implements TrailUserProviderInterface
 ```
 
 ```yaml
-angle_trail:
-    user_provider: App\Audit\MyTrailUserProvider
+angle_entity_trail:
+    user_provider: App\Audit\MyEntityTrailUserProvider
 ```
 
 ## Admin UI
@@ -185,12 +185,12 @@ When `enable_admin: true`, three routes are registered under your prefix:
 
 | Route | Path | Purpose |
 |-------|------|---------|
-| `angle_trail_list` | `GET {prefix}/` | DataTables list with entity-type and action filters |
-| `angle_trail_data` | `POST {prefix}/data` | DataTables server-side data endpoint |
-| `angle_trail_view` | `GET {prefix}/{code}` | Full changeset for one entry |
+| `angle_entity_trail_list` | `GET {prefix}/` | DataTables list with entity-type and action filters |
+| `angle_entity_trail_data` | `POST {prefix}/data` | DataTables server-side data endpoint |
+| `angle_entity_trail_view` | `GET {prefix}/{code}` | Full changeset for one entry |
 
-Templates extend `@AngleTrail/base.html.twig` (a minimal Bootstrap 5 + DataTables base).
-Override it in your project at `templates/bundles/AngleTrailBundle/base.html.twig` to drop
+Templates extend `@AngleEntityTrail/base.html.twig` (a minimal Bootstrap 5 + DataTables base).
+Override it in your project at `templates/bundles/AngleEntityTrailBundle/base.html.twig` to drop
 the list/view pages into your own admin layout.
 
 ## Testing
@@ -202,8 +202,8 @@ vendor/bin/phpunit
 
 The suite ships unit tests (configuration, entity, attributes, user provider, DataTables
 controller) and a functional test that boots a real Symfony kernel with an in-memory
-SQLite database and asserts that create/update/delete actually write `trail_logs` rows,
-that `#[TrailExclude]` / `#[TrailIgnore]` / `exclude_fields` are honoured, and that the
+SQLite database and asserts that create/update/delete actually write `entity_trail_logs` rows,
+that `#[EntityTrailExclude]` / `#[EntityTrailIgnore]` / `exclude_fields` are honoured, and that the
 acting user is recorded.
 
 ## Non-goals

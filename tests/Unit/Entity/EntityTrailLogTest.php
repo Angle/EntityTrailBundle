@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Unit\Entity;
+namespace Angle\EntityTrailBundle\Tests\Unit\Entity;
 
-use Angle\TrailBundle\Entity\TrailLog;
+use Angle\EntityTrailBundle\Entity\EntityTrailLog;
 use PHPUnit\Framework\TestCase;
 
-final class TrailLogTest extends TestCase
+final class EntityTrailLogTest extends TestCase
 {
     public function testOnPrePersistGeneratesA32CharHexCodeAndTimestamp(): void
     {
-        $log = new TrailLog();
+        $log = new EntityTrailLog();
         $log->onPrePersist();
 
         self::assertSame(32, \strlen($log->getCode()));
@@ -23,7 +23,7 @@ final class TrailLogTest extends TestCase
     {
         $createdAt = new \DateTimeImmutable('2026-01-01 00:00:00');
 
-        $log = (new TrailLog())
+        $log = (new EntityTrailLog())
             ->setCode('preset-code')
             ->setCreatedAt($createdAt);
         $log->onPrePersist();
@@ -34,9 +34,9 @@ final class TrailLogTest extends TestCase
 
     public function testEachGeneratedCodeIsUnique(): void
     {
-        $a = new TrailLog();
+        $a = new EntityTrailLog();
         $a->onPrePersist();
-        $b = new TrailLog();
+        $b = new EntityTrailLog();
         $b->onPrePersist();
 
         self::assertNotSame($a->getCode(), $b->getCode());
@@ -44,25 +44,25 @@ final class TrailLogTest extends TestCase
 
     public function testGetEntityShortNameReturnsLastNamespaceSegment(): void
     {
-        $log = (new TrailLog())->setEntityType('App\\Entity\\Client');
+        $log = (new EntityTrailLog())->setEntityType('App\\Entity\\Client');
 
         self::assertSame('Client', $log->getEntityShortName());
     }
 
     public function testGetEntityShortNameHandlesClassWithoutNamespace(): void
     {
-        $log = (new TrailLog())->setEntityType('Client');
+        $log = (new EntityTrailLog())->setEntityType('Client');
 
         self::assertSame('Client', $log->getEntityShortName());
     }
 
     public function testGettersAndSetters(): void
     {
-        $log = (new TrailLog())
+        $log = (new EntityTrailLog())
             ->setEntityType('App\\Entity\\Product')
             ->setEntityId(42)
             ->setEntityCode('ABC123')
-            ->setAction(TrailLog::ACTION_UPDATE)
+            ->setAction(EntityTrailLog::ACTION_UPDATE)
             ->setChanges(['name' => ['old' => 'a', 'new' => 'b']])
             ->setUserId(7)
             ->setUserLabel('Ada Lovelace (ada@example.com)')
@@ -81,8 +81,8 @@ final class TrailLogTest extends TestCase
 
     public function testActionConstants(): void
     {
-        self::assertSame('create', TrailLog::ACTION_CREATE);
-        self::assertSame('update', TrailLog::ACTION_UPDATE);
-        self::assertSame('delete', TrailLog::ACTION_DELETE);
+        self::assertSame('create', EntityTrailLog::ACTION_CREATE);
+        self::assertSame('update', EntityTrailLog::ACTION_UPDATE);
+        self::assertSame('delete', EntityTrailLog::ACTION_DELETE);
     }
 }

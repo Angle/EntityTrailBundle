@@ -7,10 +7,10 @@ services:
     # ---------------------------------------------------------------------
     # Core listener — writes audit rows on postFlush via raw DBAL insert.
     # ---------------------------------------------------------------------
-    Angle\TrailBundle\EventListener\TrailListener:
+    Angle\EntityTrailBundle\EventListener\EntityTrailListener:
         arguments:
-            $config: '%angle_trail.config%'
-            $userProvider: '@angle_trail.user_provider'
+            $config: '%angle_entity_trail.config%'
+            $userProvider: '@angle_entity_trail.user_provider'
         tags:
             - { name: doctrine.event_listener, event: onFlush }
             - { name: doctrine.event_listener, event: preUpdate }
@@ -22,19 +22,19 @@ services:
     # ---------------------------------------------------------------------
     # User provider (default implementation + overridable alias).
     # ---------------------------------------------------------------------
-    Angle\TrailBundle\Service\SecurityTrailUserProvider:
+    Angle\EntityTrailBundle\Service\SecurityEntityTrailUserProvider:
         arguments:
             $security: '@security.helper'
             $requestStack: '@request_stack'
 
-    angle_trail.user_provider:
-        alias: Angle\TrailBundle\Service\SecurityTrailUserProvider
+    angle_entity_trail.user_provider:
+        alias: Angle\EntityTrailBundle\Service\SecurityEntityTrailUserProvider
         public: true
 
     # ---------------------------------------------------------------------
     # Repository.
     # ---------------------------------------------------------------------
-    Angle\TrailBundle\Repository\TrailLogRepository:
+    Angle\EntityTrailBundle\Repository\EntityTrailLogRepository:
         arguments:
             $registry: '@doctrine'
         tags:
@@ -43,17 +43,17 @@ services:
     # ---------------------------------------------------------------------
     # Admin controllers (removed by the extension when enable_admin: false).
     # ---------------------------------------------------------------------
-    Angle\TrailBundle\Controller\TrailLogController:
+    Angle\EntityTrailBundle\Controller\EntityTrailLogController:
         arguments:
             $twig: '@twig'
-            $repository: '@Angle\TrailBundle\Repository\TrailLogRepository'
-            $config: '%angle_trail.config%'
+            $repository: '@Angle\EntityTrailBundle\Repository\EntityTrailLogRepository'
+            $config: '%angle_entity_trail.config%'
         tags:
             - { name: controller.service_arguments }
 
-    Angle\TrailBundle\Controller\Ajax\TrailLogController:
+    Angle\EntityTrailBundle\Controller\Ajax\EntityTrailLogController:
         arguments:
-            $repository: '@Angle\TrailBundle\Repository\TrailLogRepository'
+            $repository: '@Angle\EntityTrailBundle\Repository\EntityTrailLogRepository'
             $urlGenerator: '@router'
         tags:
             - { name: controller.service_arguments }

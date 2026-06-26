@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Contract;
+namespace Angle\EntityTrailBundle\Contract;
 
-interface TrailUserProviderInterface
+interface EntityTrailUserProviderInterface
 {
     public function getCurrentUserId(): ?int;
 

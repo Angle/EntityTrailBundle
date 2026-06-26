@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Controller\Ajax;
+namespace Angle\EntityTrailBundle\Controller\Ajax;
 
-use Angle\TrailBundle\Entity\TrailLog;
-use Angle\TrailBundle\Repository\TrailLogRepository;
+use Angle\EntityTrailBundle\Entity\EntityTrailLog;
+use Angle\EntityTrailBundle\Repository\EntityTrailLogRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 /**
  * DataTables server-side data endpoint.
  */
-final class TrailLogController
+final class EntityTrailLogController
 {
     /**
      * Ordered list of column "data" keys, matched against DataTables' order request.
@@ -23,7 +23,7 @@ final class TrailLogController
     private const COLUMNS = ['entity', 'record', 'action', 'user', 'changes', 'created_at', 'actions'];
 
     public function __construct(
-        private readonly TrailLogRepository $repository,
+        private readonly EntityTrailLogRepository $repository,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
@@ -89,9 +89,9 @@ final class TrailLogController
     /**
      * @return array<string, string>
      */
-    private function formatRow(TrailLog $log): array
+    private function formatRow(EntityTrailLog $log): array
     {
-        $viewUrl = $this->urlGenerator->generate('angle_trail_view', ['code' => $log->getCode()]);
+        $viewUrl = $this->urlGenerator->generate('angle_entity_trail_view', ['code' => $log->getCode()]);
         $record = $log->getEntityCode() ?? (string) $log->getEntityId();
         $fields = implode(', ', array_keys($log->getChanges()));
 
@@ -112,9 +112,9 @@ final class TrailLogController
     private function actionBadge(string $action): string
     {
         $class = match ($action) {
-            TrailLog::ACTION_CREATE => 'bg-success',
-            TrailLog::ACTION_UPDATE => 'bg-warning text-dark',
-            TrailLog::ACTION_DELETE => 'bg-danger',
+            EntityTrailLog::ACTION_CREATE => 'bg-success',
+            EntityTrailLog::ACTION_UPDATE => 'bg-warning text-dark',
+            EntityTrailLog::ACTION_DELETE => 'bg-danger',
             default                 => 'bg-secondary',
         };
 

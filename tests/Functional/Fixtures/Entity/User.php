@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Functional\Fixtures\Entity;
+namespace Angle\EntityTrailBundle\Tests\Functional\Fixtures\Entity;
 
-use Angle\TrailBundle\Attribute\TrailIgnore;
+use Angle\EntityTrailBundle\Attribute\EntityTrailIgnore;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -20,7 +20,7 @@ class User
     private string $email = '';
 
     #[ORM\Column(length: 255)]
-    #[TrailIgnore]
+    #[EntityTrailIgnore]
     private string $passwordHash = '';
 
     public function getId(): ?int

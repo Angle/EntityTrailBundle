@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Angle\TrailBundle\Tests\Functional\Fixtures\Entity;
+namespace Angle\EntityTrailBundle\Tests\Functional\Fixtures\Entity;
 
-use Angle\TrailBundle\Attribute\TrailExclude;
+use Angle\EntityTrailBundle\Attribute\EntityTrailExclude;
 use Doctrine\ORM\Mapping as ORM;
 
-#[TrailExclude]
+#[EntityTrailExclude]
 #[ORM\Entity]
 #[ORM\Table(name: 'test_session_logs')]
 class SessionLog
