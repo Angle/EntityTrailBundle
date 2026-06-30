@@ -11,10 +11,13 @@ use Angle\EntityTrailBundle\Entity\EntityTrailLog;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
-use Doctrine\ORM\Event\PostPersistEventArgs;
-use Doctrine\ORM\Event\PostUpdateEventArgs;
-use Doctrine\ORM\Event\PreRemoveEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+
+// Note: postPersist/postUpdate/preRemove are typed against the base
+// Doctrine\Persistence\Event\LifecycleEventArgs rather than the per-event argument
+// classes (PostPersistEventArgs, …) which only exist from Doctrine ORM 2.14. The
+// base class — and getObject()/getObjectManager() — is stable across ORM 2.9–3.x.
 
 /**
  * Writes a JSON diff to `entity_trail_logs` whenever a tracked entity is created,
@@ -113,7 +116,7 @@ final class EntityTrailListener
         $this->pending[spl_object_id($entity)] = $changeset;
     }
 
-    public function postUpdate(PostUpdateEventArgs $args): void
+    public function postUpdate(LifecycleEventArgs $args): void
     {
         $entity = $args->getObject();
         $oid = spl_object_id($entity);
@@ -128,7 +131,7 @@ final class EntityTrailListener
         $this->enqueue($args->getObjectManager(), $entity, EntityTrailLog::ACTION_UPDATE, $changeset);
     }
 
-    public function postPersist(PostPersistEventArgs $args): void
+    public function postPersist(LifecycleEventArgs $args): void
     {
         if (!$this->config['track_creates']) {
             return;
@@ -145,7 +148,7 @@ final class EntityTrailListener
         $this->enqueue($em, $entity, EntityTrailLog::ACTION_CREATE, $changes);
     }
 
-    public function preRemove(PreRemoveEventArgs $args): void
+    public function preRemove(LifecycleEventArgs $args): void
     {
         if (!$this->config['track_deletes']) {
             return;
@@ -170,7 +173,13 @@ final class EntityTrailListener
             return;
         }
 
-        $conn = $args->getObjectManager()->getConnection();
+        // getObjectManager() is the ORM 3 accessor; older ORM 2.x only exposes
+        // getEntityManager() on the flush event. Support both.
+        $em = method_exists($args, 'getObjectManager')
+            ? $args->getObjectManager()
+            : $args->getEntityManager();
+
+        $conn = $em->getConnection();
         $rows = $this->queue;
         $this->queue = [];
 

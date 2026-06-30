@@ -99,7 +99,12 @@ final class EntityTrailLogControllerTest extends TestCase
         $repository->method('findForDataTable')
             ->willReturn(['recordsTotal' => 1, 'recordsFiltered' => 1, 'items' => [$log]]);
 
-        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+        // Symfony 5.4's UrlGeneratorInterface::generate() has no declared return type,
+        // so an unstubbed mock returns null; stub it for deterministic cross-version runs.
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $urlGenerator->method('generate')->willReturn('/admin/trail-log/' . $log->getCode());
+
+        $controller = new EntityTrailLogController($repository, $urlGenerator);
 
         $payload = json_decode(
             (string) $controller->data(new Request([], ['draw' => 1]))->getContent(),

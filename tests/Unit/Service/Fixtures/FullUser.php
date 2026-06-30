@@ -47,4 +47,20 @@ final class FullUser implements UserInterface
     {
         return $this->email;
     }
+
+    // Required by UserInterface on Symfony 5.4 (removed in 6.0); harmless on 6.4/7.x.
+    public function getUsername(): string
+    {
+        return $this->email;
+    }
+
+    public function getPassword(): ?string
+    {
+        return null;
+    }
+
+    public function getSalt(): ?string
+    {
+        return null;
+    }
 }

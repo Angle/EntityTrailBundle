@@ -43,31 +43,47 @@ final class EntityTrailTestKernel extends Kernel
     public function registerContainerConfiguration(LoaderInterface $loader): void
     {
         $loader->load(function (ContainerBuilder $container): void {
-            $container->loadFromExtension('framework', [
-                'secret'                => 'test',
-                'test'                  => true,
-                'http_method_override'  => false,
-                'handle_all_throwables' => true,
-                'php_errors'            => ['log' => true],
-            ]);
+            $framework = [
+                'secret'               => 'test',
+                'test'                 => true,
+                'http_method_override' => false,
+                'php_errors'           => ['log' => true],
+            ];
+            // Added in Symfony 6.4; unknown key on 5.4.
+            if (Kernel::VERSION_ID >= 60400) {
+                $framework['handle_all_throwables'] = true;
+            }
+            $container->loadFromExtension('framework', $framework);
+
+            $orm = [
+                'auto_generate_proxy_classes'  => true,
+                'mappings' => [
+                    'EntityTrailFixtures' => [
+                        'type'      => 'attribute',
+                        'dir'       => __DIR__ . '/Fixtures/Entity',
+                        'prefix'    => 'Angle\\EntityTrailBundle\\Tests\\Functional\\Fixtures\\Entity',
+                        'is_bundle' => false,
+                    ],
+                ],
+            ];
+            // Silences an ORM 2.14+/3 deprecation. PostPersistEventArgs exists exactly
+            // from ORM 2.14, so it's a reliable feature marker for this option.
+            if (class_exists(\Doctrine\ORM\Event\PostPersistEventArgs::class)) {
+                $orm['report_fields_where_declared'] = true;
+            }
+            // On PHP 8.4 the Symfony VarExporter LazyGhostTrait is gone, so Doctrine
+            // must use native PHP lazy objects. This doctrine-bundle key only exists on
+            // recent releases — which are exactly what a PHP 8.4 install resolves to.
+            if (\PHP_VERSION_ID >= 80400) {
+                $orm['enable_native_lazy_objects'] = true;
+            }
 
             $container->loadFromExtension('doctrine', [
                 'dbal' => [
                     'driver' => 'pdo_sqlite',
                     'url'    => 'sqlite:///:memory:',
                 ],
-                'orm' => [
-                    'enable_native_lazy_objects'   => true,
-                    'report_fields_where_declared' => true,
-                    'mappings' => [
-                        'EntityTrailFixtures' => [
-                            'type'      => 'attribute',
-                            'dir'       => __DIR__ . '/Fixtures/Entity',
-                            'prefix'    => 'Angle\\EntityTrailBundle\\Tests\\Functional\\Fixtures\\Entity',
-                            'is_bundle' => false,
-                        ],
-                    ],
-                ],
+                'orm' => $orm,
             ]);
 
             $container->loadFromExtension('angle_entity_trail', array_merge([

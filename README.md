@@ -13,12 +13,19 @@ user, their IP, and a timestamp.
 
 | | |
 |-|-|
-| PHP | `>= 8.2` |
-| Symfony | `^6.4 \| ^7.0` |
-| Doctrine ORM | `^3.0` |
+| PHP | `>= 8.1` |
+| Symfony | `^5.4 \| ^6.4 \| ^7.0` |
+| Doctrine ORM | `^2.11 \| ^3.0` |
+
+> **Why not ORM 2.7?** The `EntityTrailLog` entity uses PHP-attribute mapping
+> (`#[ORM\Entity]`), which Doctrine only supports from **ORM 2.9**; and `doctrine-bundle`
+> (required by this bundle) couples the ORM version — `doctrine-bundle ^2.10` resolves to
+> **ORM ≥ 2.11**. So the practical, tested floor is ORM **2.11**. The listener is written
+> against the base `LifecycleEventArgs` (not the per-event argument classes introduced in
+> ORM 2.14), so it runs unchanged across ORM 2.11 → 3.x.
 
 `symfony/security-bundle` and `symfony/twig-bundle` are required because the default
-user provider resolves the acting user from the security context, and the admin UI
+user provider resolves the acting user from the security token storage, and the admin UI
 renders Twig. If you override `user_provider` **and** set `enable_admin: false`, neither
 is used at runtime — but they remain Composer dependencies.
 
@@ -188,6 +195,18 @@ When `enable_admin: true`, three routes are registered under your prefix:
 | `angle_entity_trail_list` | `GET {prefix}/` | DataTables list with entity-type and action filters |
 | `angle_entity_trail_data` | `POST {prefix}/data` | DataTables server-side data endpoint |
 | `angle_entity_trail_view` | `GET {prefix}/{code}` | Full changeset for one entry |
+
+> ⚠️ **Protect these routes.** The bundle does **not** add access control — the trail
+> contains who-changed-what, including user labels and old/new field values that may be
+> sensitive. Restrict the prefix to an admin role in your firewall, e.g.:
+>
+> ```yaml
+> # config/packages/security.yaml
+> access_control:
+>     - { path: ^/admin/trail-log, roles: ROLE_ADMIN }
+> ```
+>
+> Also exclude sensitive columns from auditing with `#[EntityTrailIgnore]` / `exclude_fields`.
 
 Templates extend `@AngleEntityTrail/base.html.twig` (a minimal Bootstrap 5 + DataTables base).
 Override it in your project at `templates/bundles/AngleEntityTrailBundle/base.html.twig` to drop

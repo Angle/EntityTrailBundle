@@ -5,25 +5,29 @@ declare(strict_types=1);
 namespace Angle\EntityTrailBundle\Service;
 
 use Angle\EntityTrailBundle\Contract\EntityTrailUserProviderInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * Default user provider. Resolves the acting user from the security context and
- * the client IP from the current request. In CLI/worker contexts where there is
+ * Default user provider. Resolves the acting user from the security token storage
+ * and the client IP from the current request. In CLI/worker contexts where there is
  * no authenticated user, every getter returns null.
+ *
+ * Depends on TokenStorageInterface (stable across Symfony 5.4/6.4/7.x) rather than
+ * the SecurityBundle `Security` helper, whose class moved between those versions.
  */
 final class SecurityEntityTrailUserProvider implements EntityTrailUserProviderInterface
 {
     public function __construct(
-        private readonly Security $security,
+        private readonly TokenStorageInterface $tokenStorage,
         private readonly RequestStack $requestStack,
     ) {
     }
 
     public function getCurrentUserId(): ?int
     {
-        $user = $this->security->getUser();
+        $user = $this->getUser();
 
         if ($user !== null && method_exists($user, 'getId')) {
             $id = $user->getId();
@@ -36,7 +40,7 @@ final class SecurityEntityTrailUserProvider implements EntityTrailUserProviderIn
 
     public function getCurrentUserLabel(): ?string
     {
-        $user = $this->security->getUser();
+        $user = $this->getUser();
 
         if ($user === null) {
             return null;
@@ -72,5 +76,10 @@ final class SecurityEntityTrailUserProvider implements EntityTrailUserProviderIn
     public function getCurrentIpAddress(): ?string
     {
         return $this->requestStack->getCurrentRequest()?->getClientIp();
+    }
+
+    private function getUser(): ?UserInterface
+    {
+        return $this->tokenStorage->getToken()?->getUser();
     }
 }
