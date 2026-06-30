@@ -28,6 +28,14 @@
                         <option value="delete">delete</option>
                     </select>
                 </div>
+                <div class="col-md-2">
+                    <label for="filterDateFrom" class="form-label">From</label>
+                    <input type="date" id="filterDateFrom" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label for="filterDateTo" class="form-label">To</label>
+                    <input type="date" id="filterDateTo" class="form-control">
+                </div>
             </div>
         </div>
     </div>
@@ -66,6 +74,8 @@
                     data: function (d) {
                         d.filterEntityType = $('#filterEntityType').val();
                         d.filterAction = $('#filterAction').val();
+                        d.filterDateFrom = $('#filterDateFrom').val();
+                        d.filterDateTo = $('#filterDateTo').val();
                     }
                 },
                 columns: [
@@ -79,7 +89,7 @@
                 ]
             });
 
-            $('#filterEntityType, #filterAction').on('change', function () {
+            $('#filterEntityType, #filterAction, #filterDateFrom, #filterDateTo').on('change', function () {
                 table.ajax.reload();
             });
         });

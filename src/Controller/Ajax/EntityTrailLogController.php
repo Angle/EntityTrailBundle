@@ -42,6 +42,8 @@ final class EntityTrailLogController
 
         $filterEntityType = $request->request->get('filterEntityType');
         $filterAction = $request->request->get('filterAction');
+        $filterDateFrom = $request->request->get('filterDateFrom');
+        $filterDateTo = $request->request->get('filterDateTo');
 
         $result = $this->repository->findForDataTable(
             $search,
@@ -51,6 +53,8 @@ final class EntityTrailLogController
             $sortDir,
             $filterEntityType !== null ? (string) $filterEntityType : null,
             $filterAction !== null ? (string) $filterAction : null,
+            ($filterDateFrom !== null && $filterDateFrom !== '') ? (string) $filterDateFrom : null,
+            ($filterDateTo !== null && $filterDateTo !== '') ? (string) $filterDateTo : null,
         );
 
         $data = [];

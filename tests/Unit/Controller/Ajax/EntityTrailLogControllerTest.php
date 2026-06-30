@@ -33,7 +33,7 @@ final class EntityTrailLogControllerTest extends TestCase
         $repository = $this->createMock(EntityTrailLogRepository::class);
         $repository->expects(self::once())
             ->method('findForDataTable')
-            ->with('cli', 0, 10, 'created_at', 'ASC', 'App\\Entity\\Product', 'update')
+            ->with('cli', 0, 10, 'created_at', 'ASC', 'App\\Entity\\Product', 'update', null, null)
             ->willReturn(['recordsTotal' => 500, 'recordsFiltered' => 1, 'items' => [$log]]);
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
@@ -79,7 +79,7 @@ final class EntityTrailLogControllerTest extends TestCase
         $repository = $this->createMock(EntityTrailLogRepository::class);
         $repository->expects(self::once())
             ->method('findForDataTable')
-            ->with('', 0, 25, 'created_at', 'DESC', null, null)
+            ->with('', 0, 25, 'created_at', 'DESC', null, null, null, null)
             ->willReturn(['recordsTotal' => 0, 'recordsFiltered' => 0, 'items' => []]);
 
         $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
@@ -115,5 +115,27 @@ final class EntityTrailLogControllerTest extends TestCase
 
         self::assertSame('42', $payload['data'][0]['record']);
         self::assertStringContainsString('bg-danger', $payload['data'][0]['action']);
+    }
+
+    public function testDataForwardsDateRangeFilters(): void
+    {
+        $repository = $this->createMock(EntityTrailLogRepository::class);
+        $repository->expects(self::once())
+            ->method('findForDataTable')
+            ->with('', 0, 25, 'created_at', 'DESC', null, null, '2026-06-01', '2026-06-30')
+            ->willReturn(['recordsTotal' => 0, 'recordsFiltered' => 0, 'items' => []]);
+
+        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+
+        $request = new Request([], [
+            'draw'           => 1,
+            'filterDateFrom' => '2026-06-01',
+            'filterDateTo'   => '2026-06-30',
+        ]);
+
+        $payload = json_decode((string) $controller->data($request)->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(1, $payload['draw']);
+        self::assertSame([], $payload['data']);
     }
 }

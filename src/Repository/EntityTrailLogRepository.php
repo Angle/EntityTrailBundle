@@ -61,6 +61,8 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         string $sortDir,
         ?string $filterEntityType = null,
         ?string $filterAction = null,
+        ?string $filterDateFrom = null,
+        ?string $filterDateTo = null,
     ): array {
         $recordsTotal = (int) $this->createQueryBuilder('t')
             ->select('COUNT(t.id)')
@@ -88,6 +90,18 @@ class EntityTrailLogRepository extends ServiceEntityRepository
                 ->setParameter('filterAction', $filterAction);
         }
 
+        $from = $this->parseFilterDate($filterDateFrom, false);
+        if ($from !== null) {
+            $qb->andWhere('t.createdAt >= :filterDateFrom')
+                ->setParameter('filterDateFrom', $from);
+        }
+
+        $to = $this->parseFilterDate($filterDateTo, true);
+        if ($to !== null) {
+            $qb->andWhere('t.createdAt <= :filterDateTo')
+                ->setParameter('filterDateTo', $to);
+        }
+
         $countQb = clone $qb;
         $recordsFiltered = (int) $countQb
             ->select('COUNT(t.id)')
@@ -109,6 +123,18 @@ class EntityTrailLogRepository extends ServiceEntityRepository
             'recordsFiltered' => $recordsFiltered,
             'items'           => $items,
         ];
+    }
+
+    /**
+     * Parse a YYYY-MM-DD filter string into a day boundary, or null if absent/malformed.
+     */
+    private function parseFilterDate(?string $value, bool $endOfDay): ?\DateTimeImmutable
+    {
+        if ($value === null || preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return null;
+        }
+
+        return new \DateTimeImmutable($value . ($endOfDay ? ' 23:59:59' : ' 00:00:00'));
     }
 
     /**
