@@ -10,9 +10,10 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: EntityTrailLogRepository::class)]
 #[ORM\Table(name: 'entity_trail_logs')]
-#[ORM\Index(name: 'idx_entity_trail_entity', columns: ['entity_type', 'entity_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_entity_trail_code', columns: ['code'])]
+#[ORM\Index(name: 'idx_entity_trail_entity', columns: ['entity_type', 'entity_id', 'created_at'])]
 #[ORM\Index(name: 'idx_entity_trail_created', columns: ['created_at'])]
-#[ORM\Index(name: 'idx_entity_trail_user', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_entity_trail_user', columns: ['user_id', 'created_at'])]
 #[ORM\HasLifecycleCallbacks]
 class EntityTrailLog
 {
@@ -25,7 +26,7 @@ class EntityTrailLog
     #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 32, unique: true)]
+    #[ORM\Column(length: 32)]
     private string $code;
 
     #[ORM\Column(name: 'entity_type', length: 255)]

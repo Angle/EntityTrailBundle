@@ -30,9 +30,9 @@ final class Version20260101000000_AngleEntityTrailLog extends AbstractMigration
                 ip_address  VARCHAR(45) NULL,
                 created_at  DATETIME NOT NULL,
                 UNIQUE INDEX uniq_entity_trail_code (code),
-                INDEX idx_entity_trail_entity (entity_type, entity_id),
+                INDEX idx_entity_trail_entity (entity_type, entity_id, created_at),
                 INDEX idx_entity_trail_created (created_at),
-                INDEX idx_entity_trail_user (user_id),
+                INDEX idx_entity_trail_user (user_id, created_at),
                 PRIMARY KEY (id)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE=InnoDB
         SQL);
