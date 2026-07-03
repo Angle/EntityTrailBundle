@@ -106,7 +106,7 @@ final class EntityTrailListener
             return;
         }
 
-        $changeset = $this->normalizeChangeSet($args->getEntityChangeSet());
+        $changeset = $this->normalizeChangeSet($args->getObjectManager(), $args->getEntityChangeSet());
         $changeset = $this->removeIgnoredFields($changeset, $entity);
 
         if ($changeset === []) {
@@ -322,7 +322,8 @@ final class EntityTrailListener
     }
 
     /**
-     * Snapshot of an entity's scalar fields as a {field: {old: null, new: value}} changeset.
+     * Snapshot of an entity's scalar fields and to-one associations as a
+     * {field: {old: null, new: value}} changeset.
      *
      * @return array<string, array{old: null, new: mixed}>
      */
@@ -338,7 +339,19 @@ final class EntityTrailListener
             }
 
             $value = $meta->getFieldValue($entity, $field);
-            $snapshot[$field] = ['old' => null, 'new' => $this->normalizeValue($value)];
+            $snapshot[$field] = ['old' => null, 'new' => $this->normalizeValue($em, $value)];
+        }
+
+        // Include initial to-one relations (agent, referer, …); skip unset ones.
+        foreach ($meta->getAssociationNames() as $assoc) {
+            if (!$meta->isSingleValuedAssociation($assoc)) {
+                continue;
+            }
+
+            $value = $meta->getFieldValue($entity, $assoc);
+            if ($value !== null) {
+                $snapshot[$assoc] = ['old' => null, 'new' => $this->normalizeValue($em, $value)];
+            }
         }
 
         return $snapshot;
@@ -347,25 +360,40 @@ final class EntityTrailListener
     /**
      * Convert Doctrine's [field => [old, new]] changeset into JSON-safe values.
      *
+     * Numerically identical pairs are dropped: Doctrine's decimal type hydrates
+     * strings ('0.00000') while setters often write '0' or 0 — the type differs,
+     * the value doesn't, and logging it is pure noise.
+     *
      * @param array<string, array{0: mixed, 1: mixed}> $changeSet
      *
      * @return array<string, array{old: mixed, new: mixed}>
      */
-    private function normalizeChangeSet(array $changeSet): array
+    private function normalizeChangeSet(EntityManagerInterface $em, array $changeSet): array
     {
         $normalized = [];
 
         foreach ($changeSet as $field => [$old, $new]) {
-            $normalized[$field] = [
-                'old' => $this->normalizeValue($old),
-                'new' => $this->normalizeValue($new),
+            if (is_numeric($old) && is_numeric($new) && (float) $old === (float) $new) {
+                continue;
+            }
+
+            $entry = [
+                'old' => $this->normalizeValue($em, $old),
+                'new' => $this->normalizeValue($em, $new),
             ];
+
+            // e.g. a relation re-assigned to the same record (proxy vs entity).
+            if ($entry['old'] === $entry['new']) {
+                continue;
+            }
+
+            $normalized[$field] = $entry;
         }
 
         return $normalized;
     }
 
-    private function normalizeValue(mixed $value): mixed
+    private function normalizeValue(EntityManagerInterface $em, mixed $value): mixed
     {
         if ($value === null || is_scalar($value)) {
             return $value;
@@ -380,21 +408,56 @@ final class EntityTrailListener
         }
 
         if (is_array($value)) {
-            return array_map(fn ($item) => $this->normalizeValue($item), $value);
+            return array_map(fn ($item) => $this->normalizeValue($em, $item), $value);
         }
 
         if (is_object($value)) {
-            if (method_exists($value, 'getId') && $value->getId() !== null) {
-                return $this->resolveRealClass($value) . '#' . $value->getId();
-            }
-            if ($value instanceof \Stringable) {
-                return (string) $value;
-            }
-
-            return $this->resolveRealClass($value);
+            return $this->describeObject($em, $value);
         }
 
         return $value;
+    }
+
+    /**
+     * Human-useful reference for an object value — for managed entities (relation
+     * changes), "FQCN#id (code-or-label)" so the audit answers WHICH record the
+     * relation pointed to, on both sides of the diff.
+     */
+    private function describeObject(EntityManagerInterface $em, object $value): string
+    {
+        $class = $this->resolveRealClass($value);
+
+        // Managed entity: resolve the identifier through metadata — reliable for
+        // proxies and independent of getter naming. Never let a describe failure
+        // break the flush that is being audited.
+        try {
+            if (!$em->getMetadataFactory()->isTransient($class)) {
+                $meta = $em->getClassMetadata($class);
+
+                $ids = $meta->getIdentifierValues($value);
+                $ref = $ids === []
+                    ? $class . '#new'
+                    : $class . '#' . implode('+', array_map('strval', $ids));
+
+                $label = $this->resolveEntityCode($meta, $value);
+                if ($label === null && $value instanceof \Stringable) {
+                    $label = (string) $value;
+                }
+
+                return $label !== null && $label !== '' ? sprintf('%s (%s)', $ref, $label) : $ref;
+            }
+        } catch (\Throwable) {
+            // fall through to the generic description below
+        }
+
+        if (method_exists($value, 'getId') && $value->getId() !== null) {
+            return $class . '#' . $value->getId();
+        }
+        if ($value instanceof \Stringable) {
+            return (string) $value;
+        }
+
+        return $class;
     }
 
     private function resolveEntityId(object $meta, object $entity): ?int

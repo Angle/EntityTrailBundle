@@ -116,6 +116,61 @@ final class EntityTrailListenerFunctionalTest extends TestCase
         self::assertArrayNotHasKey('updatedAt', $changes, 'exclude_fields must drop updatedAt');
     }
 
+    public function testAssociationChangeRecordsWhichRelationChangedToWhich(): void
+    {
+        $em = $this->boot();
+
+        $alice = (new User())->setEmail('alice@example.com');
+        $bob = (new User())->setEmail('bob@example.com');
+        $em->persist($alice);
+        $em->persist($bob);
+
+        $product = (new Product())->setName('Widget')->setOwner($alice);
+        $em->persist($product);
+        $em->flush();
+
+        // Reassign the relation: alice → bob (the Client.agent scenario).
+        $product->setOwner($bob);
+        $em->flush();
+
+        $rows = array_values(array_filter(
+            $this->rows($em, EntityTrailLog::ACTION_UPDATE),
+            static fn (array $r): bool => $r['entity_type'] === Product::class,
+        ));
+        self::assertCount(1, $rows);
+
+        $changes = $rows[0]['changes'];
+        self::assertArrayHasKey('owner', $changes);
+        // The stored diff must identify WHICH record on each side, not just the class.
+        self::assertStringContainsString('#' . $alice->getId(), (string) $changes['owner']['old']);
+        self::assertStringContainsString('#' . $bob->getId(), (string) $changes['owner']['new']);
+        self::assertNotSame($changes['owner']['old'], $changes['owner']['new']);
+    }
+
+    public function testNumericallyEqualDecimalChangeIsNotLogged(): void
+    {
+        $em = $this->boot();
+
+        $product = (new Product())->setName('Widget')->setPrice('0.00000');
+        $em->persist($product);
+        $em->flush();
+
+        // Doctrine hydrates decimal as '0.00000'; the app writes back '0'.
+        // Same value → must NOT produce an audit row (the feeFactor noise).
+        $product->setPrice('0');
+        $em->flush();
+
+        self::assertCount(0, $this->rows($em, EntityTrailLog::ACTION_UPDATE));
+
+        // A real numeric change must still be logged.
+        $product->setPrice('2.50000');
+        $em->flush();
+
+        $rows = $this->rows($em, EntityTrailLog::ACTION_UPDATE);
+        self::assertCount(1, $rows);
+        self::assertArrayHasKey('price', $rows[0]['changes']);
+    }
+
     public function testNoUpdateRowWhenOnlyExcludedFieldsChange(): void
     {
         $em = $this->boot();

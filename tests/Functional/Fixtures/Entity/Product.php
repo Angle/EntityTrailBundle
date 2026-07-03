@@ -25,9 +25,42 @@ class Product
     #[ORM\Column(name: 'updated_at', length: 32, nullable: true)]
     private ?string $updatedAt = null;
 
+    // Association — mirrors the Client.agent / Client.referer pattern in real projects.
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'owner_id', nullable: true)]
+    private ?User $owner = null;
+
+    // Doctrine's decimal type hydrates strings ('0.00000'); setters often write '0'.
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 5, nullable: true)]
+    private ?string $price = null;
+
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getPrice(): ?string
+    {
+        return $this->price;
+    }
+
+    public function setPrice(?string $price): self
+    {
+        $this->price = $price;
+
+        return $this;
     }
 
     public function getCode(): ?string
