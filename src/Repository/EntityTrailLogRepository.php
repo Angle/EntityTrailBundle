@@ -73,9 +73,8 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('t');
 
         if ($search !== '') {
-            $qb->andWhere($qb->expr()->orX(
-                't.entityCode = :search'
-            ))->setParameter('search', $search);
+            $qb->andWhere('t.entityCode = :search')
+                ->setParameter('search', $search);
         }
 
         if ($filterEntityType !== null && $filterEntityType !== '') {
@@ -188,7 +187,7 @@ class EntityTrailLogRepository extends ServiceEntityRepository
             ->getQuery()
             ->getScalarResult();
 
-        return array_map(static fn (array $row): string => (string) $row['entityType'], $rows);
+        return array_map(static fn(array $row): string => (string) $row['entityType'], $rows);
     }
 
     /**
@@ -211,7 +210,7 @@ class EntityTrailLogRepository extends ServiceEntityRepository
             ->getQuery()
             ->getScalarResult();
 
-        return array_map(static fn (array $row): array => [
+        return array_map(static fn(array $row): array => [
             'userId'    => (int) $row['userId'],
             'userLabel' => (string) $row['userLabel'],
         ], $rows);
