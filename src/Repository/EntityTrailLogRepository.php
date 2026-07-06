@@ -74,11 +74,8 @@ class EntityTrailLogRepository extends ServiceEntityRepository
 
         if ($search !== '') {
             $qb->andWhere($qb->expr()->orX(
-                't.entityType LIKE :search',
-                't.entityCode LIKE :search',
-                't.action LIKE :search',
-                't.userLabel LIKE :search',
-            ))->setParameter('search', '%' . $search . '%');
+                't.entityCode = :search'
+            ))->setParameter('search', $search);
         }
 
         if ($filterEntityType !== null && $filterEntityType !== '') {
