@@ -63,6 +63,7 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         ?string $filterAction = null,
         ?string $filterDateFrom = null,
         ?string $filterDateTo = null,
+        ?int $filterUserId = null,
     ): array {
         $recordsTotal = (int) $this->createQueryBuilder('t')
             ->select('COUNT(t.id)')
@@ -100,6 +101,14 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         if ($to !== null) {
             $qb->andWhere('t.createdAt <= :filterDateTo')
                 ->setParameter('filterDateTo', $to);
+        }
+
+        if ($filterUserId === 0) {
+            // 0 is the "no user" sentinel (real user ids are positive).
+            $qb->andWhere('t.userId IS NULL');
+        } elseif ($filterUserId !== null) {
+            $qb->andWhere('t.userId = :filterUserId')
+                ->setParameter('filterUserId', $filterUserId);
         }
 
         $countQb = clone $qb;
@@ -183,5 +192,31 @@ class EntityTrailLogRepository extends ServiceEntityRepository
             ->getScalarResult();
 
         return array_map(static fn (array $row): string => (string) $row['entityType'], $rows);
+    }
+
+    /**
+     * Distinct users present in the trail, for the admin filter dropdown.
+     * The label comes from each user's most recent entry (highest id), so a
+     * renamed user shows under their current cached name.
+     *
+     * @return list<array{userId: int, userLabel: string}>
+     */
+    public function findDistinctUsers(): array
+    {
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.userId AS userId', 't.userLabel AS userLabel')
+            ->andWhere('t.userId IS NOT NULL')
+            ->andWhere(sprintf(
+                't.id = (SELECT MAX(t2.id) FROM %s t2 WHERE t2.userId = t.userId)',
+                EntityTrailLog::class,
+            ))
+            ->orderBy('t.userLabel', 'ASC')
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row): array => [
+            'userId'    => (int) $row['userId'],
+            'userLabel' => (string) $row['userLabel'],
+        ], $rows);
     }
 }

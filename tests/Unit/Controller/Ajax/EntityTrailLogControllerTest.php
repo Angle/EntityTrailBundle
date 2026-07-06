@@ -138,4 +138,61 @@ final class EntityTrailLogControllerTest extends TestCase
         self::assertSame(1, $payload['draw']);
         self::assertSame([], $payload['data']);
     }
+
+    public function testDataForwardsUserFilterAsInt(): void
+    {
+        $repository = $this->createMock(EntityTrailLogRepository::class);
+        $repository->expects(self::once())
+            ->method('findForDataTable')
+            ->with('', 0, 25, 'created_at', 'DESC', null, null, null, null, 7)
+            ->willReturn(['recordsTotal' => 0, 'recordsFiltered' => 0, 'items' => []]);
+
+        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+
+        $request = new Request([], [
+            'draw'         => 1,
+            'filterUserId' => '7',
+        ]);
+
+        $payload = json_decode((string) $controller->data($request)->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(1, $payload['draw']);
+        self::assertSame([], $payload['data']);
+    }
+
+    public function testDataForwardsNoUserSentinelZero(): void
+    {
+        $repository = $this->createMock(EntityTrailLogRepository::class);
+        $repository->expects(self::once())
+            ->method('findForDataTable')
+            ->with('', 0, 25, 'created_at', 'DESC', null, null, null, null, 0)
+            ->willReturn(['recordsTotal' => 0, 'recordsFiltered' => 0, 'items' => []]);
+
+        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+
+        $request = new Request([], [
+            'draw'         => 1,
+            'filterUserId' => '0',
+        ]);
+
+        $controller->data($request);
+    }
+
+    public function testDataIgnoresEmptyUserFilter(): void
+    {
+        $repository = $this->createMock(EntityTrailLogRepository::class);
+        $repository->expects(self::once())
+            ->method('findForDataTable')
+            ->with('', 0, 25, 'created_at', 'DESC', null, null, null, null, null)
+            ->willReturn(['recordsTotal' => 0, 'recordsFiltered' => 0, 'items' => []]);
+
+        $controller = new EntityTrailLogController($repository, $this->createMock(UrlGeneratorInterface::class));
+
+        $request = new Request([], [
+            'draw'         => 1,
+            'filterUserId' => '',
+        ]);
+
+        $controller->data($request);
+    }
 }
