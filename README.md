@@ -231,3 +231,7 @@ acting user is recorded.
 - Does **not** audit raw SQL run outside Doctrine.
 - Does **not** provide row-level restore/rollback — it's a read-only audit trail.
 - Does **not** send notifications on changes.
+
+## License
+
+This bundle is released under the [MIT License](LICENSE).

@@ -2,7 +2,7 @@
     "name": "anglemx/entity-trail-bundle",
     "description": "Automatic Doctrine entity audit log for Symfony — who changed what and when.",
     "type": "symfony-bundle",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": ">=8.1",
         "symfony/framework-bundle": "^5.4|^6.4|^7.0",
