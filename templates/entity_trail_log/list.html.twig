@@ -19,23 +19,13 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <label for="filterAction" class="form-label">Action</label>
                     <select id="filterAction" class="form-select">
                         <option value="">All actions</option>
                         <option value="create">create</option>
                         <option value="update">update</option>
                         <option value="delete">delete</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="filterUserId" class="form-label">User</label>
-                    <select id="filterUserId" class="form-select">
-                        <option value="">All users</option>
-                        <option value="0">—</option>
-                        {% for user in users %}
-                            <option value="{{ user.userId }}">{{ user.userLabel }}</option>
-                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -84,7 +74,6 @@
                     data: function (d) {
                         d.filterEntityType = $('#filterEntityType').val();
                         d.filterAction = $('#filterAction').val();
-                        d.filterUserId = $('#filterUserId').val();
                         d.filterDateFrom = $('#filterDateFrom').val();
                         d.filterDateTo = $('#filterDateTo').val();
                     }

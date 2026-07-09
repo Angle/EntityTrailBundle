@@ -29,7 +29,6 @@ final class EntityTrailLogController
     {
         return new Response($this->twig->render('@AngleEntityTrail/entity_trail_log/list.html.twig', [
             'entity_types'        => $this->repository->findDistinctEntityTypes(),
-            'users'               => $this->repository->findDistinctUsers(),
             'admin_route_prefix'  => $this->config['admin_route_prefix'] ?? '',
         ]));
     }
