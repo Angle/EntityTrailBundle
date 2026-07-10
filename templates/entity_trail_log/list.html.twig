@@ -10,7 +10,7 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="filterEntityType" class="form-label">Entity type</label>
                     <select id="filterEntityType" class="form-select">
                         <option value="">All entities</option>
@@ -89,7 +89,7 @@
                 ]
             });
 
-            $('#filterEntityType, #filterAction, #filterDateFrom, #filterDateTo').on('change', function () {
+            $('#filterEntityType, #filterAction, #filterUserId, #filterDateFrom, #filterDateTo').on('change', function () {
                 table.ajax.reload();
             });
         });

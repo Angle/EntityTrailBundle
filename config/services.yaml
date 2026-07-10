@@ -55,5 +55,6 @@ services:
         arguments:
             $repository: '@Angle\EntityTrailBundle\Repository\EntityTrailLogRepository'
             $urlGenerator: '@router'
+            $config: '%angle_entity_trail.config%'
         tags:
             - { name: controller.service_arguments }

@@ -72,6 +72,9 @@ angle_entity_trail:
     enable_admin: true
     admin_route_prefix: /admin/trail-log
     user_provider: null   # null = default SecurityEntityTrailUserProvider; or a service id
+    created_at_format:
+        timezone: null     # null = render the stored value as-is; or a timezone name (e.g. America/Mexico_City)
+        format: 'Y-m-d H:i'   # DateTime::format() string
 ```
 
 All keys are optional; the defaults above (minus the example exclusions) are applied
@@ -231,3 +234,7 @@ acting user is recorded.
 - Does **not** audit raw SQL run outside Doctrine.
 - Does **not** provide row-level restore/rollback — it's a read-only audit trail.
 - Does **not** send notifications on changes.
+
+## License
+
+This bundle is released under the [MIT License](LICENSE).

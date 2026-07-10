@@ -63,6 +63,7 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         ?string $filterAction = null,
         ?string $filterDateFrom = null,
         ?string $filterDateTo = null,
+        ?int $filterUserId = null,
     ): array {
         $recordsTotal = (int) $this->createQueryBuilder('t')
             ->select('COUNT(t.id)')
@@ -72,12 +73,8 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('t');
 
         if ($search !== '') {
-            $qb->andWhere($qb->expr()->orX(
-                't.entityType LIKE :search',
-                't.entityCode LIKE :search',
-                't.action LIKE :search',
-                't.userLabel LIKE :search',
-            ))->setParameter('search', '%' . $search . '%');
+            $qb->andWhere('t.entityCode = :search')
+                ->setParameter('search', $search);
         }
 
         if ($filterEntityType !== null && $filterEntityType !== '') {
@@ -100,6 +97,14 @@ class EntityTrailLogRepository extends ServiceEntityRepository
         if ($to !== null) {
             $qb->andWhere('t.createdAt <= :filterDateTo')
                 ->setParameter('filterDateTo', $to);
+        }
+
+        if ($filterUserId === 0) {
+            // 0 is the "no user" sentinel (real user ids are positive).
+            $qb->andWhere('t.userId IS NULL');
+        } elseif ($filterUserId !== null) {
+            $qb->andWhere('t.userId = :filterUserId')
+                ->setParameter('filterUserId', $filterUserId);
         }
 
         $countQb = clone $qb;
@@ -182,6 +187,6 @@ class EntityTrailLogRepository extends ServiceEntityRepository
             ->getQuery()
             ->getScalarResult();
 
-        return array_map(static fn (array $row): string => (string) $row['entityType'], $rows);
+        return array_map(static fn(array $row): string => (string) $row['entityType'], $rows);
     }
 }
