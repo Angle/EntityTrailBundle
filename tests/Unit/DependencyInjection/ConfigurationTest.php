@@ -32,6 +32,8 @@ final class ConfigurationTest extends TestCase
         self::assertTrue($config['enable_admin']);
         self::assertSame('/admin/trail-log', $config['admin_route_prefix']);
         self::assertNull($config['user_provider']);
+        self::assertNull($config['created_at_format']['timezone']);
+        self::assertSame('Y-m-d H:i', $config['created_at_format']['format']);
     }
 
     public function testOverridesReplaceDefaults(): void
@@ -43,6 +45,7 @@ final class ConfigurationTest extends TestCase
             'enable_admin'     => false,
             'admin_route_prefix' => '/admin/audit',
             'user_provider'    => 'app.my_provider',
+            'created_at_format' => ['timezone' => 'America/Mexico_City', 'format' => 'd/m/Y H:i:s'],
         ]);
 
         self::assertFalse($config['track_deletes']);
@@ -52,6 +55,16 @@ final class ConfigurationTest extends TestCase
         self::assertFalse($config['enable_admin']);
         self::assertSame('/admin/audit', $config['admin_route_prefix']);
         self::assertSame('app.my_provider', $config['user_provider']);
+        self::assertSame('America/Mexico_City', $config['created_at_format']['timezone']);
+        self::assertSame('d/m/Y H:i:s', $config['created_at_format']['format']);
+    }
+
+    public function testCreatedAtFormatPartialOverrideKeepsOtherDefault(): void
+    {
+        $config = $this->process(['created_at_format' => ['timezone' => 'UTC']]);
+
+        self::assertSame('UTC', $config['created_at_format']['timezone']);
+        self::assertSame('Y-m-d H:i', $config['created_at_format']['format']);
     }
 
     public function testBooleanFlagsCoerceTruthyValues(): void

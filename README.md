@@ -72,6 +72,9 @@ angle_entity_trail:
     enable_admin: true
     admin_route_prefix: /admin/trail-log
     user_provider: null   # null = default SecurityEntityTrailUserProvider; or a service id
+    created_at_format:
+        timezone: null     # null = render the stored value as-is; or a timezone name (e.g. America/Mexico_City)
+        format: 'Y-m-d H:i'   # DateTime::format() string
 ```
 
 All keys are optional; the defaults above (minus the example exclusions) are applied

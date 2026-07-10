@@ -22,9 +22,13 @@ final class EntityTrailLogController
      */
     private const COLUMNS = ['entity', 'record', 'action', 'user', 'changes', 'created_at', 'actions'];
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(
         private readonly EntityTrailLogRepository $repository,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly array $config = [],
     ) {
     }
 
@@ -107,12 +111,26 @@ final class EntityTrailLogController
             'action'     => $this->actionBadge($log->getAction()),
             'user'       => htmlspecialchars($log->getUserLabel() ?? '—', ENT_QUOTES),
             'changes'    => htmlspecialchars($fields, ENT_QUOTES),
-            'created_at' => $log->getCreatedAt()->format('Y-m-d H:i'),
+            'created_at' => $this->formatCreatedAt($log->getCreatedAt()),
             'actions'    => sprintf(
                 '<a href="%s" class="btn btn-sm btn-outline-primary">View</a>',
                 htmlspecialchars($viewUrl, ENT_QUOTES),
             ),
         ];
+    }
+
+    private function formatCreatedAt(\DateTimeImmutable $createdAt): string
+    {
+        /** @var array{timezone?: ?string, format?: string} $config */
+        $config = $this->config['created_at_format'] ?? [];
+        $timezone = $config['timezone'] ?? null;
+        $format = $config['format'] ?? 'Y-m-d H:i';
+
+        if ($timezone !== null) {
+            $createdAt = $createdAt->setTimezone(new \DateTimeZone($timezone));
+        }
+
+        return $createdAt->format($format);
     }
 
     private function actionBadge(string $action): string

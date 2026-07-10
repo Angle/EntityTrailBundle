@@ -160,6 +160,54 @@ final class EntityTrailLogControllerTest extends TestCase
         self::assertSame([], $payload['data']);
     }
 
+    public function testCreatedAtUsesDefaultFormatWhenNoConfigGiven(): void
+    {
+        $log = $this->sampleLog();
+
+        $repository = $this->createMock(EntityTrailLogRepository::class);
+        $repository->method('findForDataTable')
+            ->willReturn(['recordsTotal' => 1, 'recordsFiltered' => 1, 'items' => [$log]]);
+
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $urlGenerator->method('generate')->willReturn('/admin/trail-log/' . $log->getCode());
+
+        $controller = new EntityTrailLogController($repository, $urlGenerator);
+
+        $payload = json_decode(
+            (string) $controller->data(new Request([], ['draw' => 1]))->getContent(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        self::assertSame('2026-06-10 14:32', $payload['data'][0]['created_at']);
+    }
+
+    public function testCreatedAtUsesConfiguredFormatAndTimezone(): void
+    {
+        $log = $this->sampleLog()
+            ->setCreatedAt(new \DateTimeImmutable('2026-06-10 14:32:05', new \DateTimeZone('UTC')));
+
+        $repository = $this->createMock(EntityTrailLogRepository::class);
+        $repository->method('findForDataTable')
+            ->willReturn(['recordsTotal' => 1, 'recordsFiltered' => 1, 'items' => [$log]]);
+
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $urlGenerator->method('generate')->willReturn('/admin/trail-log/' . $log->getCode());
+
+        $config = ['created_at_format' => ['timezone' => 'America/Mexico_City', 'format' => 'd/m/Y H:i:s']];
+        $controller = new EntityTrailLogController($repository, $urlGenerator, $config);
+
+        $payload = json_decode(
+            (string) $controller->data(new Request([], ['draw' => 1]))->getContent(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        self::assertSame('10/06/2026 08:32:05', $payload['data'][0]['created_at']);
+    }
+
     public function testDataForwardsNoUserSentinelZero(): void
     {
         $repository = $this->createMock(EntityTrailLogRepository::class);

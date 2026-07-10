@@ -49,6 +49,20 @@ final class Configuration implements ConfigurationInterface
                     ->info('Service id overriding the default SecurityEntityTrailUserProvider. null = use default.')
                     ->defaultNull()
                 ->end()
+                ->arrayNode('created_at_format')
+                    ->info('How the admin list renders the "created_at" column.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('timezone')
+                            ->info('Timezone name (e.g. "America/Mexico_City"). null = server default / stored value.')
+                            ->defaultNull()
+                        ->end()
+                        ->scalarNode('format')
+                            ->info('DateTime::format() string.')
+                            ->defaultValue('Y-m-d H:i')
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;
